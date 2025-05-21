@@ -1,4 +1,4 @@
-package com.saasant.firstSpringProject.dao;
+package com.saasant.customerServiceSpring.dao;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository; // Changed from @Service to @Repository
 
-import com.saasant.firstSpringProject.entity.Customers;
-import com.saasant.firstSpringProject.repo.CustomerRepository;
-import com.saasant.firstSpringProject.vo.CustomerDetails;
+import com.saasant.customerServiceSpring.entity.Customers;
+import com.saasant.customerServiceSpring.repo.CustomerRepository;
+import com.saasant.customerServiceSpring.vo.CustomerDetails;
 
 import jakarta.transaction.Transactional;
 
