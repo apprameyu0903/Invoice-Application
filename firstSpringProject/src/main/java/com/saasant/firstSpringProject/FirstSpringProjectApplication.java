@@ -1,9 +1,10 @@
 package com.saasant.firstSpringProject;
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-
+import org.springframework.context.annotation.Bean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -24,4 +25,9 @@ public class FirstSpringProjectApplication {
 		SpringApplication.run(FirstSpringProjectApplication.class, args);
 		log.info("FirstSpringProjectApplication has started successfully with Instance ID: {}", APPLICATION_INSTANCE_ID);
 	}
+	
+    @Bean
+    public ModelMapper getModelMapper() {
+        return new ModelMapper();
+    }
 }

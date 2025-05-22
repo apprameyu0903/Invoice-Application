@@ -6,6 +6,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.saasant.firstSpringProject.FirstSpringProjectApplication;
@@ -83,13 +85,29 @@ public class CustomerService implements CustomerServiceInterface {
         }
 	}
 	
-	@Override
-	public List<CustomerDetails> getAllCustomers(){ 
+	//@Override
+	/*public List<CustomerDetails> getAllCustomers(){ 
 		log.info("SERVICE: Fetching all customers via DAO.");
 		List<CustomerDetails> customers = customerDao.getAllCustomers(); // Calls DAO
 		log.debug("SERVICE: Found {} customers.", customers.size());
 		return customers;
+	}*/
+	
+	@Override
+	public Page<CustomerDetails> getAllCustomers(Pageable pageable){ 
+		log.info("SERVICE: Fetching all customers via DAO with pagination: {}", pageable);
+		Page<CustomerDetails> customersDetailsPage = customerDao.getAllCustomers(pageable);
+		log.debug("SERVICE: Found {} customers on page {} of {}", customersDetailsPage.getNumberOfElements(), customersDetailsPage.getNumber(), customersDetailsPage.getTotalPages());
+		return customersDetailsPage;
 	}
+	
+	@Override
+    public Page<CustomerDetails> searchCustomers(String searchTerm, Pageable pageable) {
+        log.info("SERVICE: Searching customers with term '{}' and pagination: {}", searchTerm, pageable);
+        Page<CustomerDetails> customersDetailsPage = customerDao.searchCustomers(searchTerm, pageable);
+        log.debug("SERVICE: Found {} customers for search term '{}' on page {} of {}", customersDetailsPage.getNumberOfElements(), searchTerm, customersDetailsPage.getNumber(), customersDetailsPage.getTotalPages());
+        return customersDetailsPage;
+    }
 
 	@Override
 	public CustomerDetails getCustomerById(String customerId) {

@@ -6,6 +6,10 @@ import com.saasant.firstSpringProject.vo.CustomerDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,13 +33,26 @@ public class CustomerController {
         log.debug("API: Customer found: {}", customerId);
         return ResponseEntity.ok(customer);
     }
+    
+    @GetMapping("/search/{query}") 
+    public ResponseEntity<Page<CustomerDetails>> searchCustomers(
+            @PathVariable String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "7") int size,
+            @RequestParam(defaultValue = "customerId,asc") String[] sort) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sort[0]));
+        Page<CustomerDetails> customersPage = customerService.searchCustomers(query, pageable);
+        return ResponseEntity.ok(customersPage);
+    }
 
     @GetMapping
-    public ResponseEntity<List<CustomerDetails>> getAllCustomers() {
-        log.info("API: Request to get all customers.");
-        List<CustomerDetails> customers = customerService.getAllCustomers();
-        log.debug("API: Returning all {} customers.", customers.size());
-        return ResponseEntity.ok(customers);
+    public ResponseEntity<Page<CustomerDetails>> getAllCustomers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "7") int size,
+            @RequestParam(defaultValue = "customerId,asc") String[] sort) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sort[0]));
+        Page<CustomerDetails> customersPage = customerService.getAllCustomers(pageable);
+        return ResponseEntity.ok(customersPage);
     }
 
     @PostMapping

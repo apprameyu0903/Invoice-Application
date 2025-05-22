@@ -107,6 +107,10 @@
 
     <script th:inline="javascript">
     const API_BASE_URL = 'http://localhost:8081/api/customers';
+    
+    let currentPage = 0;
+    let currentSize = 7; 
+    let currentSort = ['customerId,asc'];
 
     $(document).ready(initializePage);
 
@@ -119,7 +123,7 @@
         $("#customerTable").on("click", ".delete-link", handleDeleteLinkClick);
         $("#customerTable").on("click", ".edit-link", handleEditLinkClick);
         $("#editCustomerForm").on("submit", handleEditFormSubmit);
-        getAndShowCustomers("");
+        getAndShowCustomers($("#customerSearchInput").val().trim());
     }
 
     function debounce(func, delay) {

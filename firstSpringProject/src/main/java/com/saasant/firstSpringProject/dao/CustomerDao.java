@@ -5,9 +5,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository; // Changed from @Service to @Repository
 
 import com.saasant.firstSpringProject.entity.Customers;
@@ -21,29 +26,30 @@ public class CustomerDao implements CustomerDaoInterface {
 
     private static final Logger log = LoggerFactory.getLogger(CustomerDao.class);
 
-    @Autowired
     CustomerRepository customerRepository;
+    private final ModelMapper modelMapper;
 
-    // Helper method to convert Entity to VO
+    @Autowired
+    public CustomerDao(CustomerRepository customerRepository, ModelMapper modelMapper) {
+        this.customerRepository = customerRepository;
+        this.modelMapper = modelMapper;
+    }
+ // Helper method to convert Entity to VO using ModelMapper
     private CustomerDetails convertToDetails(Customers customerEntity) {
         if (customerEntity == null) {
             return null;
         }
-        return new CustomerDetails(customerEntity.getCustomerId(),customerEntity.getCustomerName(),customerEntity.getCustomerMobile(),customerEntity.getCustomerLocation());
+        return modelMapper.map(customerEntity, CustomerDetails.class);
     }
 
-    // Helper method to convert VO to Entity
+    // Helper method to convert VO to Entity using ModelMapper
     private Customers convertToEntity(CustomerDetails customerDetails) {
         if (customerDetails == null) {
             return null;
         }
-        Customers customerEntity = new Customers();
-        customerEntity.setCustomerId(customerDetails.getCustomerId());
-        customerEntity.setCustomerName(customerDetails.getCustomerName());
-        customerEntity.setCustomerMobile(customerDetails.getMobileNumber());
-        customerEntity.setCustomerLocation(customerDetails.getCustomerLocation());
-        return customerEntity;
+        return modelMapper.map(customerDetails, Customers.class);
     }
+    
     
     @Transactional
     @Override
@@ -78,9 +84,7 @@ public class CustomerDao implements CustomerDaoInterface {
         log.debug("DAO: Attempting to update customer: {} via repository", customerDetails.getCustomerId());
         Customers existingEntity = customerRepository.findById(customerDetails.getCustomerId()).orElse(null);
         if (existingEntity != null) {
-            existingEntity.setCustomerName(customerDetails.getCustomerName());
-            existingEntity.setCustomerMobile(customerDetails.getMobileNumber());
-            existingEntity.setCustomerLocation(customerDetails.getCustomerLocation());
+        	modelMapper.map(customerDetails, existingEntity);
             customerRepository.save(existingEntity);
             log.info("DAO: Successfully updated customer {}.", customerDetails.getCustomerId());
             return true;
@@ -105,15 +109,15 @@ public class CustomerDao implements CustomerDaoInterface {
     }
 
     @Override
-    public List<CustomerDetails> getAllCustomers() {
-        log.debug("DAO: Fetching all customers via repository.");
-        List<Customers> entities = customerRepository.findAll();
-        List<CustomerDetails> detailsList = new ArrayList<>();
-        for(Customers entity : entities) {
-        	detailsList.add(this.convertToDetails(entity));
-        }
-        log.debug("DAO: Retrieved {} customers.", detailsList.size());
-        return detailsList;
+    public Page<CustomerDetails> getAllCustomers(Pageable pageable) {
+    	Page<Customers> customersPageEntity = customerRepository.findAll(pageable);
+        return customersPageEntity.map(this::convertToDetails);
+    }
+    
+    @Override
+    public Page<CustomerDetails> searchCustomers(String searchTerm, Pageable pageable) {
+    	Page<Customers> customersPageEntity = customerRepository.findBySearchTerm(searchTerm, pageable);
+        return customersPageEntity.map(this::convertToDetails);
     }
 
 }
