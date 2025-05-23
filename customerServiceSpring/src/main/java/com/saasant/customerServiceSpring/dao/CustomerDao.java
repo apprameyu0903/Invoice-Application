@@ -19,15 +19,19 @@ import com.saasant.customerServiceSpring.entity.Customers;
 import com.saasant.customerServiceSpring.repo.CustomerRepository;
 import com.saasant.customerServiceSpring.vo.CustomerDetails;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
 @Repository 
 public class CustomerDao implements CustomerDaoInterface {
 
     private static final Logger log = LoggerFactory.getLogger(CustomerDao.class);
-
     CustomerRepository customerRepository;
     private final ModelMapper modelMapper;
+    
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Autowired
     public CustomerDao(CustomerRepository customerRepository, ModelMapper modelMapper) {
@@ -50,7 +54,7 @@ public class CustomerDao implements CustomerDaoInterface {
         return modelMapper.map(customerDetails, Customers.class);
     }
     
-    
+
     @Transactional
     @Override
     public boolean addCustomer(CustomerDetails customerDetails) {

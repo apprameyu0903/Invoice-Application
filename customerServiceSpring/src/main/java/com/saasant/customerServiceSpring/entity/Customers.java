@@ -1,5 +1,10 @@
 package com.saasant.customerServiceSpring.entity;
 
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -22,31 +27,10 @@ public class Customers {
 	private String customerId;
 	private String customerName;
 	private String customerMobile;
-	public String getCustomerId() {
-		return customerId;
-	}
-	public void setCustomerId(String customerId) {
-		this.customerId = customerId;
-	}
-	public String getCustomerName() {
-		return customerName;
-	}
-	public void setCustomerName(String customerName) {
-		this.customerName = customerName;
-	}
-	public String getCustomerMobile() {
-		return customerMobile;
-	}
-	public void setCustomerMobile(String customerMobile) {
-		this.customerMobile = customerMobile;
-	}
-	public String getCustomerLocation() {
-		return customerLocation;
-	}
-	public void setCustomerLocation(String customerLocation) {
-		this.customerLocation = customerLocation;
-	}
 	private String customerLocation;
+	
+	
+	
 
 
 }

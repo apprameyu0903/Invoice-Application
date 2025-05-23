@@ -2,6 +2,8 @@ package com.saasant.customerServiceSpring.vo;
 
 
 
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Component;
 
 @Component
@@ -21,6 +23,8 @@ public class CustomerDetails
 		this.customerLocation = customerLocation;
 	}
 	
+	//private List<Invoice> invoices = new ArrayList<>();
+	
     public CustomerDetails() {
 		super();
 	}
@@ -36,7 +40,7 @@ public class CustomerDetails
     }
 	
 
-    public String getCustomerName() {
+	public String getCustomerName() {
         return customerName;
     }
 

@@ -1,5 +1,7 @@
 package com.saasant.customerServiceSpring.service;
 import com.saasant.customerServiceSpring.vo.CustomerDetails;
+
+import java.time.LocalDateTime;
 // import com.saasant.firstSpringProject.entity.Customers; // Not directly used now
 import java.util.List;
 
@@ -34,7 +36,7 @@ public class CustomerService implements CustomerServiceInterface {
 		boolean success = customerDao.addCustomer(customer); // Calls DAO
 		if(success) {
 		    log.info("SERVICE: Customer {} added successfully via DAO.", customer.getCustomerId());
-			return customerDao.getCustomerById(customer.getCustomerId()); // Fetch the added customer details
+			return customerDao.getCustomerById(customer.getCustomerId()); 
 		}
 		log.error("SERVICE: Failed to add customer using DAO: {}", customer.getCustomerId());
 		return null;
@@ -59,7 +61,7 @@ public class CustomerService implements CustomerServiceInterface {
         boolean success = customerDao.updateCustomer(customerUpdates); // Calls DAO
         if (success) {
         	log.info("SERVICE: Customer {} updated successfully via DAO.", customerId);
-        	return customerDao.getCustomerById(customerId); // Return updated details
+        	return customerDao.getCustomerById(customerId); 
         }
         log.error("SERVICE: Failed to update customer using DAO: {}", customerId);
         return null;
