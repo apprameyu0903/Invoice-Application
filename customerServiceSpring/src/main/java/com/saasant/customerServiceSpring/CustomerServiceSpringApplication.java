@@ -9,10 +9,14 @@ import org.slf4j.MDC;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.domain.AuditorAware;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 import com.saasant.customerServiceSpring.CustomerServiceSpringApplication;
+import com.saasant.customerServiceSpring.config.AuditAwareImpl;
 
 @SpringBootApplication
+@EnableJpaAuditing
 public class CustomerServiceSpringApplication {
 	
 	private static final Logger log = LoggerFactory.getLogger(CustomerServiceSpringApplication.class);
@@ -27,6 +31,11 @@ public class CustomerServiceSpringApplication {
     @Bean
     public ModelMapper getModelMapper() {
         return new ModelMapper();
+    }
+    
+    @Bean
+    public AuditorAware<String> auditorProvider() { //
+        return new AuditAwareImpl();
     }
 
 }

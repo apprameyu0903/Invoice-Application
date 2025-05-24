@@ -30,8 +30,6 @@ public class CustomerDao implements CustomerDaoInterface {
     CustomerRepository customerRepository;
     private final ModelMapper modelMapper;
     
-    @PersistenceContext
-    private EntityManager entityManager;
 
     @Autowired
     public CustomerDao(CustomerRepository customerRepository, ModelMapper modelMapper) {
