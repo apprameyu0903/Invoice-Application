@@ -13,10 +13,12 @@ public class Invoice {
 	String invoiceNumber;
 	String customerId;
 	String employeeId;
-	List<ProductInfo> products;
 	float billAmount;
 	private LocalDate dueDate;
     private LocalDateTime invoiceDate;
+    
+    
+    
     
 
 }
