@@ -88,8 +88,13 @@ public class InvoiceDetails {
     
     public void calculateTotalAmount() {
         float sum = 0;
-        for (InvoiceItem item : this.items) {
-            sum = sum + item.getItemTotal();
+        if (this.items != null) {
+            for (InvoiceItem item : this.items) {
+                if (item != null) { 
+                    item.calculateLineTotal(); 
+                    sum = sum + item.getItemTotal();
+                }
+            }
         }
         this.billAmount = sum;
     }

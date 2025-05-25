@@ -5,16 +5,16 @@ package com.saasant.invoiceServiceSpring.vo;
 public class InvoiceItem {
 	
 	InvoiceDetails invoice;
-	Product product;
+	String productId;
 	int quantity;
 	float pricePerUnit;
 	float itemTotal;
 
 	public InvoiceItem() {}
 
-    public InvoiceItem(InvoiceDetails invoice, Product product, int quantity, float pricePerUnit) {
+    public InvoiceItem(InvoiceDetails invoice, String productId, int quantity, float pricePerUnit) {
         this.invoice = invoice;
-        this.product = product;
+        this.productId = productId;
         this.quantity = quantity;
         this.pricePerUnit = pricePerUnit;
         this.itemTotal = pricePerUnit * quantity;
@@ -28,12 +28,12 @@ public class InvoiceItem {
 		this.invoice = invoice;
 	}
 
-	public Product getProduct() {
-		return product;
+	public String getProductId() {
+		return productId;
 	}
 
-	public void setProduct(Product product) {
-		this.product = product;
+	public void setProductId(String productId) {
+		this.productId = productId;
 	}
 
 	public int getQuantity() {
@@ -61,7 +61,7 @@ public class InvoiceItem {
 	}
     
     public void calculateLineTotal() {
-        if (pricePerUnit != null && quantity > 0) {
+        if (quantity > 0) {
             itemTotal = pricePerUnit * this.quantity;
         } else {
             this.itemTotal = 0;
