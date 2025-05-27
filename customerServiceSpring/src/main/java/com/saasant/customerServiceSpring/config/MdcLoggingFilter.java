@@ -10,6 +10,8 @@ import jakarta.servlet.http.HttpSession;
 
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
 import java.io.IOException;
 import java.util.UUID;
 import com.saasant.customerServiceSpring.CustomerServiceSpringApplication;
@@ -19,32 +21,39 @@ public class MdcLoggingFilter implements Filter{
 	
 	private static final String SESSION_TRACKING_ID_KEY = "sessionTrackingId"; 
     private static final String MDC_TRACKING_ID_KEY = "trackingId"; 
+    private static final String TRANSACTION_ID_HEADER = "X-Transaction-ID";
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
             throws IOException, ServletException {
-    	String trackingId = null;
+    	String finalTransactionId = null;
 
-        // Ensure we are dealing with an HTTP request to access session information.
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
-            HttpSession session = httpRequest.getSession(true);
-            Object sessionAttr = session.getAttribute(SESSION_TRACKING_ID_KEY);
-            if (sessionAttr instanceof String) {
-                trackingId = (String) sessionAttr;
-            }
-            if (trackingId == null || trackingId.trim().isEmpty()) {
-                trackingId = UUID.randomUUID().toString();
-                session.setAttribute(SESSION_TRACKING_ID_KEY, trackingId);
-               
-            }
-            MDC.put(MDC_TRACKING_ID_KEY, trackingId);
-        } 
-        try {
+            
+            // 1. Try to get transaction ID from incoming header
+            String headerTransactionId = httpRequest.getHeader(TRANSACTION_ID_HEADER);
 
+            if (StringUtils.hasText(headerTransactionId)) {
+                finalTransactionId = headerTransactionId;
+            } else {
+                // 2. Fallback to session or generate new if not in header
+                HttpSession session = httpRequest.getSession(true); // Get or create session
+                Object sessionAttr = session.getAttribute(SESSION_TRACKING_ID_KEY);
+                if (sessionAttr instanceof String && StringUtils.hasText((String)sessionAttr)) {
+                    finalTransactionId = (String) sessionAttr;
+                } else {
+                    finalTransactionId = UUID.randomUUID().toString();
+                    session.setAttribute(SESSION_TRACKING_ID_KEY, finalTransactionId);
+                }
+            }
+            MDC.put(MDC_TRACKING_ID_KEY, finalTransactionId);
+        }
+
+        try {
             filterChain.doFilter(request, response);
         } finally {
-            if (trackingId != null) { 
+            if (finalTransactionId != null) {
                 MDC.remove(MDC_TRACKING_ID_KEY);
             }
         }

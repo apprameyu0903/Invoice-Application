@@ -20,22 +20,20 @@ import com.saasant.customerServiceSpring.config.AuditAwareImpl;
 public class CustomerServiceSpringApplication {
 	
 	private static final Logger log = LoggerFactory.getLogger(CustomerServiceSpringApplication.class);
+    public static final String APPLICATION_INSTANCE_ID = UUID.randomUUID().toString();
+    private static final String LOGGING_ID_KEY = "txId";
 
 
 	public static void main(String[] args) {
-        log.info("Starting FirstSpringProjectApplication");
+		if (MDC.get(LOGGING_ID_KEY) == null) {
+            MDC.put(LOGGING_ID_KEY, APPLICATION_INSTANCE_ID);
+        }
+
+		log.info("Starting CustomerServiceSpringApplication with Instance ID: {}", APPLICATION_INSTANCE_ID);
 		SpringApplication.run(CustomerServiceSpringApplication.class, args);
-		log.info("FirstSpringProjectApplication has started successfully");
+		log.info("CustomerServiceSpringApplication has started successfully with Instance ID: {}", APPLICATION_INSTANCE_ID);
 	}
 	
-    @Bean
-    public ModelMapper getModelMapper() {
-        return new ModelMapper();
-    }
-    
-    @Bean
-    public AuditorAware<String> auditorProvider() { //
-        return new AuditAwareImpl();
-    }
+
 
 }

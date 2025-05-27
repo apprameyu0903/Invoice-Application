@@ -2,6 +2,7 @@ package com.saasant.invoiceServiceSpring.controller;
 
 import org.slf4j.LoggerFactory;
 
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -155,7 +156,9 @@ public class InvoiceController {
 
         // 4. Set Invoice Number and Dates
         if (invoiceDetails.getInvoiceNumber() == null || invoiceDetails.getInvoiceNumber().trim().isEmpty()) {
-            invoiceDetails.setInvoiceNumber("INV-" + UUID.randomUUID().toString().substring(0, 10).toUpperCase());
+        	DateTimeFormatter dtf = DateTimeFormatter.ofPattern("ddMMYYYY");
+            String formattedDate = java.time.LocalDate.now().format(dtf);
+            invoiceDetails.setInvoiceNumber("INV-" + formattedDate);
             log.info("Generated new invoice number: {}", invoiceDetails.getInvoiceNumber());
         }
         if (invoiceDetails.getInvoiceDate() == null) {
