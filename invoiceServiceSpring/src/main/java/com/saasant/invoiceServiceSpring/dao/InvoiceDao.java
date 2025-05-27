@@ -80,7 +80,6 @@ public class InvoiceDao implements InvoiceDaoInterface{
                 invoiceItemRepository.save(itemEntity);
             }
         }
-        // The interface requires returning the Invoice entity
         return savedInvoiceEntity;
     }
     

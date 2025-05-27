@@ -145,6 +145,10 @@ public class InvoiceController {
             if(productOpt.isPresent()){
                 Product validatedProduct = productOpt.get();
                 log.info("Product {} (ID: {}) validated. Price from service: {}", validatedProduct.getName(), productIdInt, validatedProduct.getPrice());
+                double basePrice = validatedProduct.getPrice();
+                double taxPercent = validatedProduct.getTaxPercent();
+                double priceWithTax = basePrice + (basePrice * (taxPercent / 100.0));
+                item.setPricePerUnit((float) priceWithTax);
             } else {
                 log.warn("Product ID {} was marked valid but details not found. Possible inconsistency.", productIdInt);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error validating product details for ID: " + productIdInt);

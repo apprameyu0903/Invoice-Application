@@ -40,7 +40,6 @@ public class ProductClientService {
 	@Value("${product.service.baseurl}")
 	private String productServiceBaseUrl;
 	
-	@PostConstruct
     public void loadProductsIntoCache() {
         String url = productServiceBaseUrl;
         log.info("Attempting to load all products into cache from URL: {}", url);
@@ -74,7 +73,7 @@ public class ProductClientService {
         try {
             
             log.warn("Direct fetch for product ID {} not implemented as ProductService might only support fetching all products. Relying on cache.", productId);
-            return Optional.empty(); // If relying solely on cache and not found.
+            return Optional.empty(); 
         } catch (Exception ex) {
             log.error("Unexpected error while fetching product ID: {}. URL: {}. Error: {}", productId, url, ex.getMessage(), ex);
             return Optional.empty();
@@ -82,7 +81,6 @@ public class ProductClientService {
     }
 
     public boolean isValidProduct(int productId) {
-        // Primarily checks the cache
         boolean exists = productCache.containsKey(productId);
         if(exists) {
             log.debug("Product ID {} found in cache during validation.", productId);
