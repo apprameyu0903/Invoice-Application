@@ -47,7 +47,7 @@ public class ProductClientService {
         try {
             ResponseEntity<List<Product>> response = restTemplate.exchange(url,HttpMethod.GET,null,new ParameterizedTypeReference<List<Product>>() {});
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                productCache.clear(); // Clear existing cache before loading
+                productCache.clear(); 
                 Map<Integer, Product> fetchedProducts = response.getBody().stream()
                         .collect(Collectors.toMap(Product::getProductId, product -> product));
                 productCache.putAll(fetchedProducts);
@@ -64,13 +64,10 @@ public class ProductClientService {
 
 
     public Optional<Product> getProductById(int productId) {
-        // Try fetching from cache first
         if (productCache.containsKey(productId)) {
             log.debug("Fetching product ID {} from cache.", productId);
             return Optional.ofNullable(productCache.get(productId));
         }
-
-        // If not in cache, fetch from service (and potentially update cache)
         log.info("Product ID {} not in cache. Attempting to fetch from service URL: {}/{}", productId, productServiceBaseUrl, productId);
         String url = productServiceBaseUrl + "/" + productId; 
 
@@ -78,12 +75,6 @@ public class ProductClientService {
             
             log.warn("Direct fetch for product ID {} not implemented as ProductService might only support fetching all products. Relying on cache.", productId);
             return Optional.empty(); // If relying solely on cache and not found.
-        } catch (HttpClientErrorException.NotFound ex) {
-            log.info("Product not found with ID: {}. URL: {}", productId, url);
-            return Optional.empty();
-        } catch (RestClientException ex) {
-            log.error("Error calling Product Service for ID: {}. URL: {}. Error: {}", productId, url, ex.getMessage());
-            return Optional.empty();
         } catch (Exception ex) {
             log.error("Unexpected error while fetching product ID: {}. URL: {}. Error: {}", productId, url, ex.getMessage(), ex);
             return Optional.empty();

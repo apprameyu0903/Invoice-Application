@@ -44,10 +44,6 @@ public class CustomerClientService {
                 log.warn("Received non-OK status ({}) or empty body when fetching customer ID: {}", response.getStatusCode(), customerId);
                 return Optional.empty();
             }
-        } catch (HttpClientErrorException.NotFound ex) {
-            // This is an expected case if the customer doesn't exist.
-            log.info("Customer not found with ID: {}. URL: {}", customerId, url);
-            return Optional.empty();
         } catch (RestClientException ex) {
             // Handles other client-side errors (e.g., service unavailable, connection refused)
             log.error("Error calling Customer Service for ID: {}. URL: {}. Error: {}", customerId, url, ex.getMessage());

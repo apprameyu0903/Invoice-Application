@@ -1,70 +1,38 @@
 package com.saasant.invoiceServiceSpring.vo;
 
+import lombok.Data;
 
-
+@Data
 public class InvoiceItem {
 	
-	InvoiceDetails invoice;
+	String itemId;
+	String invoiceNumber;
 	String productId;
 	int quantity;
 	float pricePerUnit;
-	float itemTotal;
+	float totalCost;
+	String customerId;
+	String empId;
 
 	public InvoiceItem() {}
 
-    public InvoiceItem(InvoiceDetails invoice, String productId, int quantity, float pricePerUnit) {
-        this.invoice = invoice;
+    public InvoiceItem(String invoiceNumber, String productId, int quantity, float pricePerUnit, String customerId, String empId) {
+        this.invoiceNumber = invoiceNumber;
         this.productId = productId;
         this.quantity = quantity;
         this.pricePerUnit = pricePerUnit;
-        this.itemTotal = pricePerUnit * quantity;
+        this.totalCost = pricePerUnit * quantity;
+        this.customerId = customerId;
+        this.empId = empId;
     }
     
-    public InvoiceDetails getInvoice() {
-		return invoice;
-	}
 
-	public void setInvoice(InvoiceDetails invoice) {
-		this.invoice = invoice;
-	}
 
-	public String getProductId() {
-		return productId;
-	}
-
-	public void setProductId(String productId) {
-		this.productId = productId;
-	}
-
-	public int getQuantity() {
-		return quantity;
-	}
-
-	public void setQuantity(int quantity) {
-		this.quantity = quantity;
-	}
-
-	public float getPricePerUnit() {
-		return pricePerUnit;
-	}
-
-	public void setPricePerUnit(float pricePerUnit) {
-		this.pricePerUnit = pricePerUnit;
-	}
-
-	public float getItemTotal() {
-		return itemTotal;
-	}
-
-	public void setItemTotal(float itemTotal) {
-		this.itemTotal = itemTotal;
-	}
-    
     public void calculateLineTotal() {
         if (quantity > 0) {
-            itemTotal = pricePerUnit * this.quantity;
+            totalCost = pricePerUnit * this.quantity;
         } else {
-            this.itemTotal = 0;
+            this.totalCost = 0;
         }
     }
 	

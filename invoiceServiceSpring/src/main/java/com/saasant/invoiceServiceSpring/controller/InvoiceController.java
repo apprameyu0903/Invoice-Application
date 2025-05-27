@@ -18,13 +18,16 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import com.saasant.invoiceServiceSpring.service.CustomerClientService;
 import com.saasant.invoiceServiceSpring.service.EmployeeClientService;
+//import com.saasant.invoiceServiceSpring.service.InvoiceClientService;
+import com.saasant.invoiceServiceSpring.service.InvoiceClientServiceInterface;
 import com.saasant.invoiceServiceSpring.service.ProductClientService;
 import com.saasant.invoiceServiceSpring.vo.CustomerDetails;
 import com.saasant.invoiceServiceSpring.vo.Employee;
 import com.saasant.invoiceServiceSpring.vo.InvoiceDetails;
 import com.saasant.invoiceServiceSpring.vo.InvoiceItem;
 import com.saasant.invoiceServiceSpring.vo.Product;
-
+import com.saasant.invoiceServiceSpring.dao.InvoiceDao;
+import com.saasant.invoiceServiceSpring.entity.Invoice;
 
 @RestController
 @RequestMapping("/api/invoice")
@@ -40,6 +43,9 @@ public class InvoiceController {
 	
 	@Autowired
 	ProductClientService productClientService;
+	
+	@Autowired
+	InvoiceClientServiceInterface invoiceClientService;
 	
 	
 	@GetMapping("/test/customer/{customerId}")
@@ -59,6 +65,20 @@ public class InvoiceController {
         } else {
             log.warn("Test endpoint: Customer not found with ID: {}", customerId);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Test failed: Customer not found with ID: " + customerId);
+        }
+    }
+	
+	@GetMapping("/{invoiceNumber}")
+    public ResponseEntity<?> getInvoiceByNumber(@PathVariable String invoiceNumber) {
+        log.info("Request to fetch invoice with number: {}", invoiceNumber);
+        Optional<InvoiceDetails> invoiceDetailsOpt = invoiceClientService.getInvoiceByNumber(invoiceNumber);
+
+        if (invoiceDetailsOpt.isPresent()) {
+            log.info("Invoice found: {}", invoiceNumber);
+            return ResponseEntity.ok(invoiceDetailsOpt.get());
+        } else {
+            log.warn("Invoice not found with number: {}", invoiceNumber);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invoice not found with number: " + invoiceNumber);
         }
     }
 	
@@ -147,17 +167,15 @@ public class InvoiceController {
 
         // 5. Calculate Total Amount (ensure this uses the potentially updated item prices if you override them)
         invoiceDetails.calculateTotalAmount();
-        log.info("Calculated total bill amount: {}", invoiceDetails.getBillAmount());
-
-        // 6. Persist Invoice (Placeholder for actual persistence logic using an InvoiceRepository)
+        log.info("Calculated total bill amount: {}", invoiceDetails.getTotalAmount());
         try {
-            //InvoiceEntity savedInvoice = invoiceRepository.save(convertToEntity(invoiceDetails));
-            log.info("Invoice processing complete (persistence to be implemented) for invoice number: {}", invoiceDetails.getInvoiceNumber());
+        	Invoice savedInvoice = invoiceClientService.saveInvoice(invoiceDetails);
+            log.info("Invoice processing complete for invoice number: {}", invoiceDetails.getInvoiceNumber());
             String responseMessage = String.format("Invoice %s created successfully for customer %s, by employee %s. Total: %.2f. %d item(s) processed.",
-                    invoiceDetails.getInvoiceNumber(),
+                    savedInvoice.getInvoiceNumber(),
                     validatedCustomer.getCustomerName(),
                     validatedEmployee.getEmpName(),
-                    invoiceDetails.getBillAmount(),
+                    savedInvoice.getTotalAmount(),
                     invoiceDetails.getItems().size()
                     );
             return ResponseEntity.status(HttpStatus.CREATED).body(responseMessage);

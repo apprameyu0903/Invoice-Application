@@ -11,7 +11,7 @@ public class InvoiceDetails {
 	String invoiceNumber;
 	String customerId;
 	String employeeId;
-	float billAmount;
+	float totalAmount;
 	private LocalDate dueDate;
     private LocalDateTime invoiceDate;
     
@@ -43,12 +43,12 @@ public class InvoiceDetails {
 		this.employeeId = employeeId;
 	}
 
-	public float getBillAmount() {
-		return billAmount;
+	public float getTotalAmount() {
+		return totalAmount;
 	}
 
-	public void setBillAmount(float billAmount) {
-		this.billAmount = billAmount;
+	public void setTotalAmount(float totalAmount) {
+		this.totalAmount = totalAmount;
 	}
 
 	public LocalDate getDueDate() {
@@ -75,16 +75,6 @@ public class InvoiceDetails {
 		this.items = items;
 	}
 
-
-	public void addItem(InvoiceItem item) {
-        items.add(item);
-        item.setInvoice(this);
-    }
-
-    public void removeItem(InvoiceItem item) {
-        items.remove(item);
-        item.setInvoice(null);
-    }
     
     public void calculateTotalAmount() {
         float sum = 0;
@@ -92,10 +82,10 @@ public class InvoiceDetails {
             for (InvoiceItem item : this.items) {
                 if (item != null) { 
                     item.calculateLineTotal(); 
-                    sum = sum + item.getItemTotal();
+                    sum = sum + item.getTotalCost();
                 }
             }
         }
-        this.billAmount = sum;
+        this.totalAmount = sum;
     }
 }

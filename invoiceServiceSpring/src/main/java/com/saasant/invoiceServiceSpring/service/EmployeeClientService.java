@@ -47,14 +47,8 @@ public class EmployeeClientService {
                 log.warn("Received non-OK status ({}) or empty body when fetching employee ID: {}", response.getStatusCode(), employeeId);
                 return Optional.empty();
             }
-        } catch (HttpClientErrorException.NotFound ex) {
-            log.info("Employee not found with ID: {}. URL: {}", employeeId, url);
-            return Optional.empty();
         } catch (RestClientException ex) {
             log.error("Error calling Employee Service for ID: {}. URL: {}. Error: {}", employeeId, url, ex.getMessage());
-            return Optional.empty();
-        } catch (Exception ex) {
-            log.error("Unexpected error while fetching employee ID: {}. URL: {}. Error: {}", employeeId, url, ex.getMessage(), ex);
             return Optional.empty();
         }
     }
