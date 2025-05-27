@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +29,9 @@ import com.saasant.invoiceServiceSpring.vo.InvoiceItem;
 import com.saasant.invoiceServiceSpring.vo.Product;
 import com.saasant.invoiceServiceSpring.dao.InvoiceDao;
 import com.saasant.invoiceServiceSpring.entity.Invoice;
+import com.saasant.invoiceServiceSpring.exception.CustomerNotFoundException;
+import com.saasant.invoiceServiceSpring.exception.EmployeeNotFoundException;
+import com.saasant.invoiceServiceSpring.exception.ProductNotFoundException;
 
 @RestController
 @RequestMapping("/api/invoice")
@@ -48,23 +52,17 @@ public class InvoiceController {
 	InvoiceClientServiceInterface invoiceClientService;
 	
 	
-	@GetMapping("/test/customer/{customerId}")
-    public ResponseEntity<String> testGetCustomer(@PathVariable String customerId) {
-        log.info("Test endpoint: Attempting to fetch customer with ID: {}", customerId);
-        if (customerId == null || customerId.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("Test endpoint: Customer ID cannot be empty.");
-        }
-        // Using CustomerDetailsVO as per the CustomerClientService in the Canvas
-        Optional<CustomerDetails> customerOpt = customerClientService.getCustomerById(customerId);
-        if (customerOpt.isPresent()) {
-            CustomerDetails customer = customerOpt.get();
-            // Assuming CustomerDetailsVO has getCustomerName() or similar
-            String customerName = customer.getCustomerName();
-            log.info("Test endpoint: Successfully fetched customer: {} - {}", customerId, customerName);
-            return ResponseEntity.ok("Test successful! Found customer: " + customerName + " (ID: " + customerId + ")");
-        } else {
-            log.warn("Test endpoint: Customer not found with ID: {}", customerId);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Test failed: Customer not found with ID: " + customerId);
+	@GetMapping("/products/refresh-cache")
+    public ResponseEntity<String> refreshProductCache() {
+        log.info("Request received to refresh product cache.");
+        try {
+            productClientService.loadProductsIntoCache(); //
+            log.info("Product cache refreshed successfully.");
+            return ResponseEntity.ok("Product cache refreshed successfully.");
+        } catch (Exception e) {
+            log.error("Error occurred while refreshing product cache: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error occurred while refreshing product cache: " + e.getMessage());
         }
     }
 	
@@ -96,8 +94,7 @@ public class InvoiceController {
         Optional<CustomerDetails> customerOpt = customerClientService.getCustomerById(customerId);
         if (customerOpt.isEmpty()) {
             log.warn("Customer validation failed for ID: {}. Customer not found or error in service call.", customerId);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid Customer ID: " + customerId + ". Customer not found or unable to validate.");
+            throw new CustomerNotFoundException("Customer ID : " + customerId + " cannot be found" );
         }
         CustomerDetails validatedCustomer = customerOpt.get();
         log.info("Customer {} validated successfully: {}", customerId, validatedCustomer.getCustomerName());
@@ -111,8 +108,7 @@ public class InvoiceController {
         Optional<Employee> employeeOpt = employeeClientService.getEmployeeById(employeeId); // Assumes this service and VO exist
         if (employeeOpt.isEmpty()) {
             log.warn("Employee validation failed for ID: {}. Employee not found or error in service call.", employeeId);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid Employee ID: " + employeeId + ". Employee not found or unable to validate.");
+            throw new EmployeeNotFoundException("Employee ID : " + employeeId + " cannot be found");
         }
         Employee validatedEmployee = employeeOpt.get();
         log.info("Employee {} validated successfully: {}", employeeId, validatedEmployee.getEmpName());
@@ -139,11 +135,11 @@ public class InvoiceController {
             // Assumes ProductClientService.isValidProduct and getProductById exist and use int for product ID
             if (!productClientService.isValidProduct(productIdInt)) {
                log.warn("Invalid product ID {} found in invoice items (not in cache or service).", productIdInt);
-               return ResponseEntity.badRequest().body("Invalid product ID in items: " + productIdInt);
+               throw new ProductNotFoundException("Product ID : " + productIdInt + " cannot be found");
             }
-            Optional<Product> productOpt = productClientService.getProductById(productIdInt);
-            if(productOpt.isPresent()){
-                Product validatedProduct = productOpt.get();
+            Product productOpt = productClientService.getProductById(productIdInt);
+            if(productOpt != null){
+                Product validatedProduct = productOpt;
                 log.info("Product {} (ID: {}) validated. Price from service: {}", validatedProduct.getName(), productIdInt, validatedProduct.getPrice());
                 double basePrice = validatedProduct.getPrice();
                 double taxPercent = validatedProduct.getTaxPercent();
@@ -151,7 +147,7 @@ public class InvoiceController {
                 item.setPricePerUnit((float) priceWithTax);
             } else {
                 log.warn("Product ID {} was marked valid but details not found. Possible inconsistency.", productIdInt);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error validating product details for ID: " + productIdInt);
+                throw new ProductNotFoundException("Product ID : " + productIdInt + " cannot be found");
             }
         }
         log.info("All product items validated successfully.");

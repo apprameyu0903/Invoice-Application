@@ -10,6 +10,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.saasant.invoiceServiceSpring.exception.CustomerNotFoundException;
+import com.saasant.invoiceServiceSpring.exception.EmployeeNotFoundException;
 import com.saasant.invoiceServiceSpring.vo.Employee;
 
 import java.util.Optional;
@@ -31,7 +33,7 @@ public class EmployeeClientService {
 	public Optional<Employee> getEmployeeById(String employeeId) {
         if (employeeId == null || employeeId.trim().isEmpty()) {
             log.warn("Attempted to fetch employee with null or empty ID.");
-            return Optional.empty();
+            throw new EmployeeNotFoundException("Employee ID cannot be null or empty.");
         }
 
         String url = employeeServiceBaseUrl + "/" + employeeId;
@@ -45,7 +47,7 @@ public class EmployeeClientService {
                 return Optional.of(response.getBody());
             } else {
                 log.warn("Received non-OK status ({}) or empty body when fetching employee ID: {}", response.getStatusCode(), employeeId);
-                return Optional.empty();
+                throw new EmployeeNotFoundException("Employee ID cannot be null or empty.");
             }
         } catch (RestClientException ex) {
             log.error("Error calling Employee Service for ID: {}. URL: {}. Error: {}", employeeId, url, ex.getMessage());

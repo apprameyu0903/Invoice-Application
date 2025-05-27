@@ -13,6 +13,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import com.saasant.invoiceServiceSpring.vo.*;
 import org.slf4j.LoggerFactory;
+import com.saasant.invoiceServiceSpring.exception.CustomerNotFoundException;
 
 @Service
 public class CustomerClientService {
@@ -28,7 +29,7 @@ public class CustomerClientService {
 	public Optional<CustomerDetails> getCustomerById(String customerId) {
         if (customerId == null || customerId.trim().isEmpty()) {
             log.warn("Attempted to fetch customer with null or empty ID.");
-            return Optional.empty();
+            throw new CustomerNotFoundException("Customer ID cannot be null or empty.");
         }
 
         String url = customerServiceBaseUrl + "/" + customerId;
@@ -42,7 +43,7 @@ public class CustomerClientService {
                 return Optional.of(response.getBody());
             } else {
                 log.warn("Received non-OK status ({}) or empty body when fetching customer ID: {}", response.getStatusCode(), customerId);
-                return Optional.empty();
+                throw new CustomerNotFoundException("Customer ID cannot be null or empty.");
             }
         } catch (RestClientException ex) {
             // Handles other client-side errors (e.g., service unavailable, connection refused)

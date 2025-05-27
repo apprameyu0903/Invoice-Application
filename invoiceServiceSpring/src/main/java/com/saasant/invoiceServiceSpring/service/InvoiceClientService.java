@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.saasant.invoiceServiceSpring.dao.InvoiceDaoInterface;
 import com.saasant.invoiceServiceSpring.entity.Invoice;
+import com.saasant.invoiceServiceSpring.exception.InvoiceNotFoundException;
 import com.saasant.invoiceServiceSpring.vo.InvoiceDetails;
 
 
@@ -16,7 +17,7 @@ public class InvoiceClientService implements InvoiceClientServiceInterface {
 	@Autowired
     private InvoiceDaoInterface invoiceDao;
 
-    public Optional<InvoiceDetails> getInvoiceByNumber(String invoiceNumber) {
+	public Optional<InvoiceDetails> getInvoiceByNumber(String invoiceNumber) { 
         return invoiceDao.findInvoiceDetailsByInvoiceNumber(invoiceNumber);
     }
 

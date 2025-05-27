@@ -12,6 +12,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.saasant.invoiceServiceSpring.exception.EmployeeNotFoundException;
+import com.saasant.invoiceServiceSpring.exception.ProductNotFoundException;
 import com.saasant.invoiceServiceSpring.vo.Product;
 
 import jakarta.annotation.PostConstruct;
@@ -62,22 +64,16 @@ public class ProductClientService {
     }
 
 
-    public Optional<Product> getProductById(int productId) {
+    public Product getProductById(int productId) {
         if (productCache.containsKey(productId)) {
             log.debug("Fetching product ID {} from cache.", productId);
-            return Optional.ofNullable(productCache.get(productId));
+            Product product = productCache.get(productId);
+            if (product != null) {
+                return product;
+            }
         }
-        log.info("Product ID {} not in cache. Attempting to fetch from service URL: {}/{}", productId, productServiceBaseUrl, productId);
-        String url = productServiceBaseUrl + "/" + productId; 
-
-        try {
-            
-            log.warn("Direct fetch for product ID {} not implemented as ProductService might only support fetching all products. Relying on cache.", productId);
-            return Optional.empty(); 
-        } catch (Exception ex) {
-            log.error("Unexpected error while fetching product ID: {}. URL: {}. Error: {}", productId, url, ex.getMessage(), ex);
-            return Optional.empty();
-        }
+        log.warn("Product ID {} not found in cache.", productId);
+        throw new ProductNotFoundException("Product not found with ID: " + productId);
     }
 
     public boolean isValidProduct(int productId) {
