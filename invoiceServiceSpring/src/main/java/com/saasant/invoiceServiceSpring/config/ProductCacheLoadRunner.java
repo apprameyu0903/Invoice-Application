@@ -25,16 +25,6 @@ public class ProductCacheLoadRunner implements CommandLineRunner {
         log.info("CommandLineRunner: Product cache loading process completed.");
     }
 	
-	@Scheduled(fixedRate = 10800000)
-	public void scheduledRefreshProductCache() {
-        log.info("Scheduled Task: Refreshing product cache...");
-        try {
-            productClientService.loadProductsIntoCache();
-            log.info("Scheduled Task: Product cache refreshed successfully.");
-        } catch (Exception e) {
-            log.error("Scheduled Task: Error occurred while refreshing product cache: {}", e.getMessage(), e);
-        }
-    }
 	
 	
 

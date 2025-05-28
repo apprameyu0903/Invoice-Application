@@ -7,6 +7,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
@@ -18,6 +19,7 @@ import com.saasant.invoiceServiceSpring.vo.Product;
 
 import jakarta.annotation.PostConstruct;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,7 +36,7 @@ public class ProductClientService {
 	@Autowired
 	public RestTemplate restTemplate;
 	
-	private final Map<Integer, Product> productCache = new ConcurrentHashMap<>();
+	private final Map<Integer, Product> productCache = new HashMap<>();
 	
 	
 	
@@ -42,6 +44,7 @@ public class ProductClientService {
 	@Value("${product.service.baseurl}")
 	private String productServiceBaseUrl;
 	
+	/*@Scheduled(fixedRate = 36000000)*/
     public void loadProductsIntoCache() {
         String url = productServiceBaseUrl;
         log.info("Attempting to load all products into cache from URL: {}", url);

@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import org.slf4j.MDC;
@@ -30,21 +31,21 @@ public class MdcLoggingFilter implements Filter{
 
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
-            
-            // 1. Try to get transaction ID from incoming header
+
             String headerTransactionId = httpRequest.getHeader(TRANSACTION_ID_HEADER);
 
             if (StringUtils.hasText(headerTransactionId)) {
                 finalTransactionId = headerTransactionId;
             } else {
-                // 2. Fallback to session or generate new if not in header
-                HttpSession session = httpRequest.getSession(true); // Get or create session
+                HttpSession session = httpRequest.getSession(true);
                 Object sessionAttr = session.getAttribute(SESSION_TRACKING_ID_KEY);
                 if (sessionAttr instanceof String && StringUtils.hasText((String)sessionAttr)) {
                     finalTransactionId = (String) sessionAttr;
                 } else {
                     finalTransactionId = UUID.randomUUID().toString();
-                    session.setAttribute(SESSION_TRACKING_ID_KEY, finalTransactionId);
+                    if (response instanceof HttpServletResponse) {
+                        ((HttpServletResponse) response).setHeader(TRANSACTION_ID_HEADER, finalTransactionId);
+                    }
                 }
             }
             MDC.put(MDC_TRACKING_ID_KEY, finalTransactionId);
