@@ -8,7 +8,6 @@ import com.saasant.invoiceServiceSpring.entity.InvoiceItemEntity;
 
 public interface InvoiceItemRepository extends JpaRepository<InvoiceItemEntity, String> {
 	
-	List<InvoiceItemEntity> findByInvoiceNumber(String invoiceNumber);
-	void deleteByInvoiceNumber(String invoiceNumber);
+	List<InvoiceItemEntity> findByInvoiceId(String invoiceId);
 
 }

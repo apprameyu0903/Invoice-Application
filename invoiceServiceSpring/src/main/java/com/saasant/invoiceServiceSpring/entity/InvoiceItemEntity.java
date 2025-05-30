@@ -17,7 +17,7 @@ public class InvoiceItemEntity {
 
     @Id
     private String itemId;
-    private String invoiceNumber;
+    private String invoiceId;
     private int productId;
     private float quantity;
     private float pricePerUnit;

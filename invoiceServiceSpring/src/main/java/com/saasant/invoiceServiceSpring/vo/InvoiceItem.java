@@ -6,7 +6,7 @@ import lombok.Data;
 public class InvoiceItem {
 	
 	String itemId;
-	String invoiceNumber;
+	String invoiceId;
 	String productId;
 	int quantity;
 	float pricePerUnit;
@@ -17,7 +17,7 @@ public class InvoiceItem {
 	public InvoiceItem() {}
 
     public InvoiceItem(String invoiceNumber, String productId, int quantity, float pricePerUnit, String customerId, String empId) {
-        this.invoiceNumber = invoiceNumber;
+        this.invoiceId = invoiceId;
         this.productId = productId;
         this.quantity = quantity;
         this.pricePerUnit = pricePerUnit;

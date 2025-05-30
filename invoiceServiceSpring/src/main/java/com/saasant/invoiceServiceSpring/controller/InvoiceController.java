@@ -2,7 +2,11 @@ package com.saasant.invoiceServiceSpring.controller;
 
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -11,9 +15,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -67,17 +73,17 @@ public class InvoiceController {
         }
     }
 	
-	@GetMapping("/{invoiceNumber}")
-    public ResponseEntity<?> getInvoiceByNumber(@PathVariable String invoiceNumber) {
-        log.info("Request to fetch invoice with number: {}", invoiceNumber);
-        Optional<InvoiceDetails> invoiceDetailsOpt = invoiceClientService.getInvoiceByNumber(invoiceNumber);
+	@GetMapping("/{invoiceId}")
+    public ResponseEntity<?> getInvoiceById(@PathVariable String invoiceId) {
+        log.info("Request to fetch invoice with number: {}", invoiceId);
+        Optional<InvoiceDetails> invoiceDetailsOpt = invoiceClientService.getInvoiceById(invoiceId);
 
         if (invoiceDetailsOpt.isPresent()) {
-            log.info("Invoice found: {}", invoiceNumber);
+            log.info("Invoice found: {}", invoiceId);
             return ResponseEntity.ok(invoiceDetailsOpt.get());
         } else {
-            log.warn("Invoice not found with number: {}", invoiceNumber);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invoice not found with number: " + invoiceNumber);
+            log.warn("Invoice not found with number: {}", invoiceId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invoice not found with Id: " + invoiceId);
         }
     }
 	
@@ -152,14 +158,37 @@ public class InvoiceController {
             }
         }
         log.info("All product items validated successfully.");
+        
+        if (invoiceDetails.getItems() != null && !invoiceDetails.getItems().isEmpty()) {
+            Map<String, InvoiceItem> consolidatedItemsMap = new LinkedHashMap<>(); 
+            for (InvoiceItem currentItem : invoiceDetails.getItems()) {
+                String productId = currentItem.getProductId();
+                if (consolidatedItemsMap.containsKey(productId)) {
+                    InvoiceItem existingItem = consolidatedItemsMap.get(productId);
+                    existingItem.setQuantity(existingItem.getQuantity() + currentItem.getQuantity());
+                } else {
+                    consolidatedItemsMap.put(productId, currentItem);
+                }
+            }
+            invoiceDetails.setItems(new ArrayList<>(consolidatedItemsMap.values()));
+            log.info("Invoice items consolidated. Number of unique items: {}", invoiceDetails.getItems().size());
+        }
 
 
         // 4. Set Invoice Number and Dates
         if (invoiceDetails.getInvoiceNumber() == null || invoiceDetails.getInvoiceNumber().trim().isEmpty()) {
-        	DateTimeFormatter dtf = DateTimeFormatter.ofPattern("ddMMYYYY");
-            String formattedDate = java.time.LocalDate.now().format(dtf);
-            invoiceDetails.setInvoiceNumber("INV-" + formattedDate);
+        	LocalDate today = LocalDate.now();
+            DateTimeFormatter dtfDate = DateTimeFormatter.ofPattern("ddMMYYYY");
+            String formattedDatePart = today.format(dtfDate);
+            long countForToday = invoiceClientService.getInvoiceCount(today); //
+            long nextSequence = countForToday + 1;
+            String formattedSequence = String.format("%03d", nextSequence);
+
+            invoiceDetails.setInvoiceNumber("INV-" + formattedDatePart + "-" + formattedSequence);
             log.info("Generated new invoice number: {}", invoiceDetails.getInvoiceNumber());
+        }
+        if(invoiceDetails.getInvoiceId() == null || invoiceDetails.getInvoiceId().trim().isEmpty()) {
+        	invoiceDetails.setInvoiceId(UUID.randomUUID().toString());
         }
         if (invoiceDetails.getInvoiceDate() == null) {
             invoiceDetails.setInvoiceDate(java.time.LocalDateTime.now());
@@ -189,6 +218,18 @@ public class InvoiceController {
         }
     }
 	
+	@PutMapping("/{InvoiceId}")
+	public ResponseEntity<String> editInvoice(@PathVariable String InvoiceId, @RequestBody InvoiceDetails invoiceDetails){
+		
+		return ResponseEntity.status(HttpStatus.ACCEPTED).body("Invoice Edited Successfully");
+	}
+	
+	@DeleteMapping("/{invoiceId}")
+	public ResponseEntity<String> deleteInvoice(@PathVariable String invoiceId){
+		
+		invoiceClientService.deleteInvoiceById(invoiceId);
+		return ResponseEntity.status(HttpStatus.ACCEPTED).body("Invoice Deleted");
+	}
 	
 	
 	

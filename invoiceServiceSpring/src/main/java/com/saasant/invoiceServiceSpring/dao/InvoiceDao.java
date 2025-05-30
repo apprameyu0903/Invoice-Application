@@ -1,5 +1,6 @@
 package com.saasant.invoiceServiceSpring.dao;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -65,7 +66,7 @@ public class InvoiceDao implements InvoiceDaoInterface{
             for (InvoiceItem itemVo : invoiceDetailsDto.getItems()) {
                 InvoiceItemEntity itemEntity = new InvoiceItemEntity();
                 itemEntity.setItemId(UUID.randomUUID().toString().substring(0, 30));
-                itemEntity.setInvoiceNumber(savedInvoiceEntity.getInvoiceNumber());
+                itemEntity.setInvoiceId(savedInvoiceEntity.getInvoiceId());
                 try {
                     itemEntity.setProductId(Integer.parseInt(itemVo.getProductId()));
                 } catch (NumberFormatException e) {
@@ -84,11 +85,11 @@ public class InvoiceDao implements InvoiceDaoInterface{
     }
     
     @Override
-    public Optional<InvoiceDetails> findInvoiceDetailsByInvoiceNumber(String invoiceNumber) {
-        Optional<Invoice> invoiceOpt = invoiceRepository.findById(invoiceNumber);
+    public Optional<InvoiceDetails> findInvoiceDetailsByInvoiceId(String invoiceId) {
+        Optional<Invoice> invoiceOpt = invoiceRepository.findById(invoiceId);
         if (invoiceOpt.isPresent()) {
             Invoice invoiceEntity = invoiceOpt.get();
-            List<InvoiceItemEntity> itemEntities = invoiceItemRepository.findByInvoiceNumber(invoiceEntity.getInvoiceNumber());
+            List<InvoiceItemEntity> itemEntities = invoiceItemRepository.findByInvoiceId(invoiceEntity.getInvoiceId());
             
             // Convert entities to DTO
             InvoiceDetails invoiceDetailsDto = modelMapper.map(invoiceEntity, InvoiceDetails.class);
@@ -101,6 +102,37 @@ public class InvoiceDao implements InvoiceDaoInterface{
         }
         return Optional.empty();
     }
-
+    
+    @Override
+    public long getInvoiceCountForDate(LocalDateTime start, LocalDateTime end) {
+    	return invoiceRepository.countByInvoiceDateBetween(start, end);
+    }
+    
+    
+    @Override
+    public void deleteInvoice(String invoiceId) { //used to delete invoice by id
+    	Optional<Invoice> invoiceOpt = invoiceRepository.findById(invoiceId);
+    	if(invoiceOpt.isPresent()) {
+    		Invoice invoiceEntity = invoiceOpt.get();
+    		List<InvoiceItemEntity> itemEntities = invoiceItemRepository.findByInvoiceId(invoiceEntity.getInvoiceId());
+    		for (InvoiceItemEntity item : itemEntities) {
+    			invoiceItemRepository.delete(item);
+    			
+    		}
+    	}
+    	invoiceRepository.deleteById(invoiceId);
+    	
+    }
+    
+    public void updateInvoice(String invoiceId, InvoiceDetails invoiceDetails) {
+    	
+    	Invoice invoice = convertToEntity(invoiceDetails);
+    	Optional<Invoice> toUpdate = invoiceRepository.findById(invoiceId);
+    	if(toUpdate.isPresent()) {
+    		Invoice updateEntity = toUpdate.get();
+    		
+    	}
+    	
+    }
 
 }

@@ -16,25 +16,21 @@ public class TrackingIdFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
 
-        String finalTransactionId = null;
+        String transactionIdFromHeader = null;
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
-            String headerTransactionId = httpRequest.getHeader(TRANSACTION_ID_HEADER_NAME);
-
-            if (StringUtils.hasText(headerTransactionId)) {
-                finalTransactionId = headerTransactionId;
-            } else {
-                finalTransactionId = UUID.randomUUID().toString(); // Fallback if no header
-            }
-        } else {
-            finalTransactionId = UUID.randomUUID().toString(); // For non-HTTP requests, though less common in this context
+            transactionIdFromHeader = httpRequest.getHeader(TRANSACTION_ID_HEADER_NAME);
         }
         
-        MDC.put(MDC_TRANSACTION_ID_KEY, finalTransactionId);
+        if (StringUtils.hasText(transactionIdFromHeader)) {
+            MDC.put(MDC_TRANSACTION_ID_KEY, transactionIdFromHeader);
+        }
         try {
             chain.doFilter(request, response);
         } finally {
-            MDC.remove(MDC_TRANSACTION_ID_KEY);
+            if (StringUtils.hasText(transactionIdFromHeader)) { 
+                MDC.remove(MDC_TRANSACTION_ID_KEY);
+            }
         }
     }
 }

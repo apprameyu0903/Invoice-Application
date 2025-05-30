@@ -4,10 +4,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import java.util.List;
+
+import lombok.Data;
+
 import java.util.ArrayList;
 
+@Data
 public class InvoiceDetails {
 	
+	String invoiceId;
 	String invoiceNumber;
 	String customerId;
 	String employeeId;
@@ -18,6 +23,14 @@ public class InvoiceDetails {
     private List<InvoiceItem> items = new ArrayList<>();
     
     public InvoiceDetails() {}
+    
+    public String getInvoiceId() {
+		return invoiceId;
+	}
+
+	public void setInvoiceId(String invoiceId) {
+		this.invoiceId = invoiceId;
+	}
     
     public String getInvoiceNumber() {
 		return invoiceNumber;

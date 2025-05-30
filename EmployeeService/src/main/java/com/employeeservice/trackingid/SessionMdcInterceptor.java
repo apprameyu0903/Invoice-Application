@@ -5,9 +5,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
+import java.io.IOException;
 import java.util.UUID;
 
 
@@ -15,35 +18,25 @@ import java.util.UUID;
 public class SessionMdcInterceptor implements HandlerInterceptor {
 
 	private static final String TRANSACTION_ID_HEADER_NAME = "X-Transaction-ID";
-    private static final String MDC_TRANSACTION_ID_KEY = "transactionId"; 
-    private static final String SESSION_ID_KEY = "sessionTxId"; 
+    private static final String MDC_TRANSACTION_ID_KEY = "transactionId";
 
     @Override
-    public boolean preHandle(HttpServletRequest request,
-                           HttpServletResponse response,
-                           Object handler) {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         
-        String finalTransactionId = null;
-        String headerTransactionId = request.getHeader(TRANSACTION_ID_HEADER_NAME);
+        String transactionIdFromHeader = request.getHeader(TRANSACTION_ID_HEADER_NAME);
 
-        if (StringUtils.hasText(headerTransactionId)) {
-            finalTransactionId = headerTransactionId;
-        } else {
-            HttpSession session = request.getSession(true);
-            finalTransactionId = (String) session.getAttribute(SESSION_ID_KEY);
-            if (!StringUtils.hasText(finalTransactionId)) {
-                finalTransactionId = UUID.randomUUID().toString();
-                session.setAttribute(SESSION_ID_KEY, finalTransactionId);
-            }
+        if (StringUtils.hasText(transactionIdFromHeader)) {
+            MDC.put(MDC_TRANSACTION_ID_KEY, transactionIdFromHeader);
         }
-        
-        MDC.put(MDC_TRANSACTION_ID_KEY, finalTransactionId);
         return true;
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest request,HttpServletResponse response,Object handler,Exception ex) {
-        MDC.remove(MDC_TRANSACTION_ID_KEY);
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+        String transactionIdFromHeader = request.getHeader(TRANSACTION_ID_HEADER_NAME);
+        if (StringUtils.hasText(transactionIdFromHeader)) {
+             MDC.remove(MDC_TRANSACTION_ID_KEY);
+        }
     }
 }
 

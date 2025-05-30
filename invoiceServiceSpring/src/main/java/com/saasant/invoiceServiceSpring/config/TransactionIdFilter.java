@@ -27,26 +27,20 @@ public class TransactionIdFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
-        HttpSession session = httpRequest.getSession(false); 
+        String transactionId = httpRequest.getHeader(TRANSACTION_ID_HEADER); 
 
-        String transactionId = null;
-        if (session != null) {
-            transactionId = (String) session.getAttribute(SESSION_TRANSACTION_ID_KEY);
-        }
         if (!StringUtils.hasText(transactionId)) {
-            transactionId = httpRequest.getHeader(TRANSACTION_ID_HEADER);
+            HttpSession session = httpRequest.getSession(false);
+            if (session != null) {
+                transactionId = (String) session.getAttribute(SESSION_TRANSACTION_ID_KEY);
+            }
         }
-        boolean generatedNew = false;
+
         if (!StringUtils.hasText(transactionId)) {
             transactionId = UUID.randomUUID().toString();
-            generatedNew = true;
         }
-        if (session == null) { 
-            session = httpRequest.getSession(true); 
-        }
-        if (generatedNew || httpRequest.getHeader(TRANSACTION_ID_HEADER) != null || session.getAttribute(SESSION_TRANSACTION_ID_KEY) == null) {
-             session.setAttribute(SESSION_TRANSACTION_ID_KEY, transactionId);
-        }
+        HttpSession session = httpRequest.getSession(true); 
+        session.setAttribute(SESSION_TRANSACTION_ID_KEY, transactionId);
 
 
         MDC.put(MDC_KEY, transactionId);

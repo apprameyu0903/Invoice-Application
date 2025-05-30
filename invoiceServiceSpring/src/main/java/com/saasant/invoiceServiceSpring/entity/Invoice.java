@@ -20,6 +20,7 @@ import lombok.Data;
 public class Invoice {
 	
 	@Id
+	String invoiceId;
 	String invoiceNumber;
 	String customerId;
 	
