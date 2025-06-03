@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.saasant.invoiceServiceSpring.entity.Invoice;
 import com.saasant.invoiceServiceSpring.entity.InvoiceItemEntity;
+import com.saasant.invoiceServiceSpring.exception.InvoiceNotFoundException;
 import com.saasant.invoiceServiceSpring.repo.InvoiceRepository;
 import com.saasant.invoiceServiceSpring.vo.InvoiceDetails;
 import com.saasant.invoiceServiceSpring.vo.InvoiceItem;
@@ -126,12 +127,13 @@ public class InvoiceDao implements InvoiceDaoInterface{
     
     public void updateInvoice(String invoiceId, InvoiceDetails invoiceDetails) {
     	
-    	Invoice invoice = convertToEntity(invoiceDetails);
-    	Optional<Invoice> toUpdate = invoiceRepository.findById(invoiceId);
-    	if(toUpdate.isPresent()) {
-    		Invoice updateEntity = toUpdate.get();
-    		
-    	}
+    	Invoice existingInvoice = invoiceRepository.findById(invoiceId).orElseThrow(() -> new InvoiceNotFoundException(invoiceId + " not found."));
+    	modelMapper.map(invoiceDetails, existingInvoice);
+    	
+    	Map<Integer, InvoiceItemEntity> currentItemsMap = invoiceItemRepository.
+    	
+    	
+
     	
     }
 

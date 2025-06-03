@@ -9,6 +9,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
