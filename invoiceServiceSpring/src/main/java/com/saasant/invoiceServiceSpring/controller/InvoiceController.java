@@ -75,15 +75,55 @@ public class InvoiceController {
 	
 	@GetMapping("/{invoiceId}")
     public ResponseEntity<?> getInvoiceById(@PathVariable String invoiceId) {
-        log.info("Request to fetch invoice with number: {}", invoiceId);
+		log.info("Request to fetch invoice with ID: {}", invoiceId);
         Optional<InvoiceDetails> invoiceDetailsOpt = invoiceClientService.getInvoiceById(invoiceId);
 
         if (invoiceDetailsOpt.isPresent()) {
+            InvoiceDetails invoiceDetails = invoiceDetailsOpt.get();
             log.info("Invoice found: {}", invoiceId);
-            return ResponseEntity.ok(invoiceDetailsOpt.get());
+
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("invoiceDetails", invoiceDetails);
+
+            try {
+                Optional<CustomerDetails> customerDetailsOpt = customerClientService.getCustomerById(invoiceDetails.getCustomerId());
+                customerDetailsOpt.ifPresentOrElse(
+                    customer -> response.put("customerDetails", customer),
+                    () -> {
+                        log.warn("Customer details not found for customer ID: {}", invoiceDetails.getCustomerId());
+                        response.put("customerDetails", "Customer not found with ID: " + invoiceDetails.getCustomerId());
+                    }
+                );
+            } catch (CustomerNotFoundException e) {
+                 log.warn("CustomerNotFoundException while fetching customer ID {}: {}", invoiceDetails.getCustomerId(), e.getMessage());
+                 response.put("customerDetails", e.getMessage());
+            } catch (Exception e) {
+                log.error("Error fetching customer details for customer ID {}: {}", invoiceDetails.getCustomerId(), e.getMessage(), e);
+                response.put("customerDetails", "Error fetching customer details.");
+            }
+
+
+            try {
+                Optional<Employee> employeeDetailsOpt = employeeClientService.getEmployeeById(invoiceDetails.getEmployeeId());
+                employeeDetailsOpt.ifPresentOrElse(
+                    employee -> response.put("employeeDetails", employee),
+                    () -> {
+                        log.warn("Employee details not found for employee ID: {}", invoiceDetails.getEmployeeId());
+                        response.put("employeeDetails", "Employee not found with ID: " + invoiceDetails.getEmployeeId());
+                    }
+                );
+            } catch (EmployeeNotFoundException e) {
+                log.warn("EmployeeNotFoundException while fetching employee ID {}: {}", invoiceDetails.getEmployeeId(), e.getMessage());
+                response.put("employeeDetails", e.getMessage());
+            } catch (Exception e) {
+                log.error("Error fetching employee details for employee ID {}: {}", invoiceDetails.getEmployeeId(), e.getMessage(), e);
+                response.put("employeeDetails", "Error fetching employee details.");
+            }
+           
+            return ResponseEntity.ok(response);
         } else {
-            log.warn("Invoice not found with number: {}", invoiceId);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invoice not found with Id: " + invoiceId);
+            log.warn("Invoice not found with ID: {}", invoiceId);
+             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invoice not found with Id: " + invoiceId);
         }
     }
 	

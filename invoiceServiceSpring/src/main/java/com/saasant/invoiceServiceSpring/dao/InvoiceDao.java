@@ -91,8 +91,6 @@ public class InvoiceDao implements InvoiceDaoInterface{
         if (invoiceOpt.isPresent()) {
             Invoice invoiceEntity = invoiceOpt.get();
             List<InvoiceItemEntity> itemEntities = invoiceItemRepository.findByInvoiceId(invoiceEntity.getInvoiceId());
-            
-            // Convert entities to DTO
             InvoiceDetails invoiceDetailsDto = modelMapper.map(invoiceEntity, InvoiceDetails.class);
             List<InvoiceItem> itemVos = itemEntities.stream()
                 .map(this::convertToInvoiceItemVo) 
@@ -130,10 +128,6 @@ public class InvoiceDao implements InvoiceDaoInterface{
     	Invoice existingInvoice = invoiceRepository.findById(invoiceId).orElseThrow(() -> new InvoiceNotFoundException(invoiceId + " not found."));
     	modelMapper.map(invoiceDetails, existingInvoice);
     	
-    	
-    	
-    	
-
     	
     }
 
