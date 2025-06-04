@@ -130,7 +130,7 @@ public class InvoiceDao implements InvoiceDaoInterface{
     	Invoice existingInvoice = invoiceRepository.findById(invoiceId).orElseThrow(() -> new InvoiceNotFoundException(invoiceId + " not found."));
     	modelMapper.map(invoiceDetails, existingInvoice);
     	
-    	Map<Integer, InvoiceItemEntity> currentItemsMap = invoiceItemRepository.
+    	
     	
     	
 
