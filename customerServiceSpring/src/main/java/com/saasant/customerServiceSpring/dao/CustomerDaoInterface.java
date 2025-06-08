@@ -13,5 +13,6 @@ public interface CustomerDaoInterface {
 	boolean deleteCustomer(String customerId);
 	Page<CustomerDetails> getAllCustomers(Pageable pageable);
 	Page<CustomerDetails> searchCustomers(String searchTerm, Pageable pageable);
+	List<CustomerDetails> fetchAllCustomers();
 
 }

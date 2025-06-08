@@ -18,5 +18,5 @@ public interface CustomerServiceInterface {
 	
 	Page<CustomerDetails> getAllCustomers(Pageable pageable); 
     Page<CustomerDetails> searchCustomers(String searchTerm, Pageable pageable);
-
+    List<CustomerDetails> fetchAllCustomers();
 }

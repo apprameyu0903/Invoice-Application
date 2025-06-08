@@ -116,6 +116,14 @@ public class CustomerDao implements CustomerDaoInterface {
         return customersPageEntity.map(this::convertToDetails);
     }
     
+    public List<CustomerDetails> fetchAllCustomers() {
+    	List<Customers> customersEntity = customerRepository.findAll();
+    	return customersEntity.stream()
+                .map(this::convertToDetails)
+                .collect(Collectors.toList());
+        
+    }
+    
     @Override
     public Page<CustomerDetails> searchCustomers(String searchTerm, Pageable pageable) {
     	Page<Customers> customersPageEntity = customerRepository.findBySearchTerm(searchTerm, pageable);

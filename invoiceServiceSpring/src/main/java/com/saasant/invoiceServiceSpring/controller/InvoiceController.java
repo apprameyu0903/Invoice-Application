@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,6 +41,7 @@ import com.saasant.invoiceServiceSpring.exception.CustomerNotFoundException;
 import com.saasant.invoiceServiceSpring.exception.EmployeeNotFoundException;
 import com.saasant.invoiceServiceSpring.exception.ProductNotFoundException;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/api/invoice")
 public class InvoiceController {
@@ -63,7 +65,7 @@ public class InvoiceController {
     public ResponseEntity<String> refreshProductCache() {
         log.info("Request received to refresh product cache.");
         try {
-            productClientService.loadProductsIntoCache(); //
+            productClientService.loadProductsIntoCache(); 
             log.info("Product cache refreshed successfully.");
             return ResponseEntity.ok("Product cache refreshed successfully.");
         } catch (Exception e) {
@@ -72,7 +74,7 @@ public class InvoiceController {
                     .body("Error occurred while refreshing product cache: " + e.getMessage());
         }
     }
-	
+
 	@GetMapping("/{invoiceId}")
     public ResponseEntity<?> getInvoiceById(@PathVariable String invoiceId) {
 		log.info("Request to fetch invoice with ID: {}", invoiceId);

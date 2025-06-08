@@ -45,7 +45,7 @@ public class CustomerController {
         return ResponseEntity.ok(customersPage);
     }
 
-    @GetMapping
+    @GetMapping("/page")
     public ResponseEntity<Page<CustomerDetails>> getAllCustomers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "7") int size,
@@ -53,6 +53,13 @@ public class CustomerController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sort[0]));
         Page<CustomerDetails> customersPage = customerService.getAllCustomers(pageable);
         return ResponseEntity.ok(customersPage);
+    }
+    
+    @GetMapping
+    public ResponseEntity<List<CustomerDetails>> getAllCustomers() {
+        log.info("API: Request to get all customers");
+        List<CustomerDetails> customers = customerService.fetchAllCustomers();
+        return ResponseEntity.ok(customers);
     }
 
     @PostMapping

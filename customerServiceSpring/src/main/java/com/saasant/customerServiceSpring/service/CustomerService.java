@@ -103,6 +103,13 @@ public class CustomerService implements CustomerServiceInterface {
 		return customersDetailsPage;
 	}
 	
+
+	public List<CustomerDetails> fetchAllCustomers(){
+		List<CustomerDetails> customers = customerDao.fetchAllCustomers();
+		return customers;
+		
+	}
+	
 	@Override
     public Page<CustomerDetails> searchCustomers(String searchTerm, Pageable pageable) {
         log.info("SERVICE: Searching customers with term '{}' and pagination: {}", searchTerm, pageable);

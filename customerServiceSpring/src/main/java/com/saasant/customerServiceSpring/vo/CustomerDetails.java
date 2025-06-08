@@ -11,7 +11,7 @@ public class CustomerDetails
 
 	String customerId;
     String customerName;
-    String mobileNumber;
+    String customerMobile;
     String customerLocation;
 
     public String getCustomerLocation() {
@@ -28,12 +28,12 @@ public class CustomerDetails
 		super();
 	}
 
-	public CustomerDetails(String customerId, String customerName, String mobileNumber, String customerLocation)
+	public CustomerDetails(String customerId, String customerName, String customerMobile, String customerLocation)
     {
 
         this.customerId = customerId;
         this.customerName = customerName;
-        this.mobileNumber = mobileNumber;
+        this.customerMobile = customerMobile;
         this.customerLocation = customerLocation;
 
     }
@@ -47,15 +47,17 @@ public class CustomerDetails
         this.customerName = customerName;
     }
 
-    public String getMobileNumber() {
-        return mobileNumber;
-    }
 
-    public void setMobileNumber(String mobileNumber) {
-        this.mobileNumber = mobileNumber;
-    }
 
-    public String getCustomerId() {
+	public String getCustomerMobile() {
+		return customerMobile;
+	}
+
+	public void setCustomerMobile(String customerMobile) {
+		this.customerMobile = customerMobile;
+	}
+
+	public String getCustomerId() {
         return customerId;
     }
 
