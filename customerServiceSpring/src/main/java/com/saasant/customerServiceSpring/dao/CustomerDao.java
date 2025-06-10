@@ -61,6 +61,7 @@ public class CustomerDao implements CustomerDaoInterface {
             log.warn("DAO: Customer ID {} already exists. Cannot add.", customerDetails.getCustomerId());
             return false;
         }
+        
         Customers customerEntity = convertToEntity(customerDetails);
         customerRepository.save(customerEntity);
         log.info("DAO: Successfully added customer {} via repository.", customerDetails.getCustomerId());

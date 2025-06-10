@@ -33,7 +33,7 @@ public class CustomerService implements CustomerServiceInterface {
 		if (customer == null || customer.getCustomerId() == null || customer.getCustomerId().trim().isEmpty()) {
 			return null;
 		}
-		boolean success = customerDao.addCustomer(customer); // Calls DAO
+		boolean success = customerDao.addCustomer(customer); 
 		if(success) {
 		    log.info("SERVICE: Customer {} added successfully via DAO.", customer.getCustomerId());
 			return customerDao.getCustomerById(customer.getCustomerId()); 
