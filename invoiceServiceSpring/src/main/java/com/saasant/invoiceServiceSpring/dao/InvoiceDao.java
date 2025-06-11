@@ -1,9 +1,12 @@
 package com.saasant.invoiceServiceSpring.dao;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
@@ -103,13 +106,25 @@ public class InvoiceDao implements InvoiceDaoInterface{
     }
     
     @Override
+    public List<InvoiceDetails> fetchInvoices(){
+    	List<Invoice> invoices = invoiceRepository.findAll();
+        List<InvoiceDetails> invoiceDetails = invoices.stream()
+                .map(invoice -> {
+                    List<InvoiceItemEntity> itemEntities = invoiceItemRepository.findByInvoiceId(invoice.getInvoiceId()); //
+                    return convertToDto(invoice, itemEntities);
+                })
+                .collect(Collectors.toList());
+    	return invoiceDetails;
+    }
+    
+    @Override
     public long getInvoiceCountForDate(LocalDateTime start, LocalDateTime end) {
     	return invoiceRepository.countByInvoiceDateBetween(start, end);
     }
     
     
     @Override
-    public void deleteInvoice(String invoiceId) { //used to delete invoice by id
+    public void deleteInvoice(String invoiceId) { 
     	Optional<Invoice> invoiceOpt = invoiceRepository.findById(invoiceId);
     	if(invoiceOpt.isPresent()) {
     		Invoice invoiceEntity = invoiceOpt.get();
@@ -123,12 +138,40 @@ public class InvoiceDao implements InvoiceDaoInterface{
     	
     }
     
-    public void updateInvoice(String invoiceId, InvoiceDetails invoiceDetails) {
-    	
-    	Invoice existingInvoice = invoiceRepository.findById(invoiceId).orElseThrow(() -> new InvoiceNotFoundException(invoiceId + " not found."));
-    	modelMapper.map(invoiceDetails, existingInvoice);
-    	
-    	
-    }
+    
+    @Override
+    @Transactional
+    public Invoice updateInvoice(String invoiceId, InvoiceDetails invoiceDetails) {
+        Invoice existingInvoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new InvoiceNotFoundException("Invoice with ID " + invoiceId + " not found."));
+        existingInvoice.setInvoiceId(invoiceId);
+        existingInvoice.setInvoiceNumber(invoiceDetails.getInvoiceNumber());
+        existingInvoice.setCustomerId(invoiceDetails.getCustomerId());
+        existingInvoice.setEmployeeId(invoiceDetails.getEmployeeId());
+        existingInvoice.setTotalAmount(invoiceDetails.getTotalAmount());
+        existingInvoice.setDueDate(invoiceDetails.getDueDate());
+        existingInvoice.setInvoiceDate(invoiceDetails.getInvoiceDate());
 
+        List<InvoiceItemEntity> existingItems = invoiceItemRepository.findByInvoiceId(invoiceId);
+        invoiceItemRepository.deleteAll(existingItems);
+        if (invoiceDetails.getItems() != null && !invoiceDetails.getItems().isEmpty()) {
+            for (InvoiceItem itemVo : invoiceDetails.getItems()) {
+                InvoiceItemEntity itemEntity = new InvoiceItemEntity();
+                itemEntity.setItemId(UUID.randomUUID().toString().substring(0, 30));
+                itemEntity.setInvoiceId(existingInvoice.getInvoiceId());
+                try {
+                    itemEntity.setProductId(Integer.parseInt(itemVo.getProductId()));
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Invalid Product ID format: " + itemVo.getProductId(), e);
+                }
+                itemEntity.setQuantity(itemVo.getQuantity());
+                itemEntity.setPricePerUnit(itemVo.getPricePerUnit());
+                itemEntity.setTotalCost(itemVo.getTotalCost());
+                itemEntity.setCustomerId(existingInvoice.getCustomerId());
+                itemEntity.setEmpId(existingInvoice.getEmployeeId());
+                invoiceItemRepository.save(itemEntity);
+            }
+        }
+        return invoiceRepository.save(existingInvoice);
+    }
 }

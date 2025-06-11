@@ -2,6 +2,7 @@ package com.saasant.invoiceServiceSpring.service;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 import java.time.LocalDate;
 
@@ -28,7 +29,9 @@ public class InvoiceClientService implements InvoiceClientServiceInterface {
         return invoiceDao.saveInvoice(invoiceDetails);
     }
     
-
+    public List<InvoiceDetails> fetchInvoices(){
+    	return invoiceDao.fetchInvoices();
+    }
     
     @Override
     public long getInvoiceCount(LocalDate date) {
@@ -40,5 +43,9 @@ public class InvoiceClientService implements InvoiceClientServiceInterface {
     public void deleteInvoiceById(String invoiceId) {
     	invoiceDao.deleteInvoice(invoiceId);
     }
-
+    
+    
+    public Invoice updateInvoice(String invoiceId, InvoiceDetails invoiceDetails) {
+    	return invoiceDao.updateInvoice(invoiceId, invoiceDetails);
+    }
 }

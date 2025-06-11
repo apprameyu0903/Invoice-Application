@@ -12,6 +12,7 @@ public interface InvoiceDaoInterface {
 	Optional<InvoiceDetails> findInvoiceDetailsByInvoiceId(String invoiceId);
 	public long getInvoiceCountForDate(LocalDateTime start, LocalDateTime end);
 	public void deleteInvoice(String invoiceId);
-	public void updateInvoice(String invoiceId, InvoiceDetails Invoice);
+	public Invoice updateInvoice(String invoiceId, InvoiceDetails Invoice);
+	List<InvoiceDetails> fetchInvoices();
 
 }

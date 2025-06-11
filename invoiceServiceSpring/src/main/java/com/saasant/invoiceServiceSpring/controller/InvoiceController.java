@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -74,6 +75,19 @@ public class InvoiceController {
                     .body("Error occurred while refreshing product cache: " + e.getMessage());
         }
     }
+	
+	@GetMapping
+	public ResponseEntity<List<InvoiceDetails>> getInvoices(){
+		log.info("Request to fetch invoices");
+		
+		List<InvoiceDetails> invoices = invoiceClientService.fetchInvoices();
+		log.info("Invoices fetched");
+
+		return ResponseEntity.ok(invoices);
+		
+	}
+	
+	
 
 	@GetMapping("/{invoiceId}")
     public ResponseEntity<?> getInvoiceById(@PathVariable String invoiceId) {
@@ -260,10 +274,111 @@ public class InvoiceController {
         }
     }
 	
-	@PutMapping("/{InvoiceId}")
-	public ResponseEntity<String> editInvoice(@PathVariable String InvoiceId, @RequestBody InvoiceDetails invoiceDetails){
-		
-		return ResponseEntity.status(HttpStatus.ACCEPTED).body("Invoice Edited Successfully");
+	@PutMapping("/{invoiceId}")
+	public ResponseEntity<String> editInvoice(@PathVariable String invoiceId, @RequestBody InvoiceDetails invoiceDetails){
+		log.info("Request to edit invoice with ID: {}", invoiceId);
+		String customerId = invoiceDetails.getCustomerId();
+        if (customerId == null || customerId.trim().isEmpty()) {
+            log.warn("Customer ID is missing in the request.");
+            return ResponseEntity.badRequest().body("Customer ID is required.");
+        }
+
+        Optional<CustomerDetails> customerOpt = customerClientService.getCustomerById(customerId);
+        if (customerOpt.isEmpty()) {
+            log.warn("Customer validation failed for ID: {}. Customer not found or error in service call.", customerId);
+            throw new CustomerNotFoundException("Customer ID : " + customerId + " cannot be found" );
+        }
+        CustomerDetails validatedCustomer = customerOpt.get();
+        log.info("Customer {} validated successfully: {}", customerId, validatedCustomer.getCustomerName());
+
+        String employeeId = invoiceDetails.getEmployeeId();
+        if (employeeId == null || employeeId.trim().isEmpty()) {
+            log.warn("Employee ID is missing in the request.");
+            return ResponseEntity.badRequest().body("Employee ID is required.");
+        }
+        Optional<Employee> employeeOpt = employeeClientService.getEmployeeById(employeeId); 
+        if (employeeOpt.isEmpty()) {
+            log.warn("Employee validation failed for ID: {}. Employee not found or error in service call.", employeeId);
+            throw new EmployeeNotFoundException("Employee ID : " + employeeId + " cannot be found");
+        }
+        Employee validatedEmployee = employeeOpt.get();
+        log.info("Employee {} validated successfully: {}", employeeId, validatedEmployee.getEmpName());
+
+        if (invoiceDetails.getItems() == null || invoiceDetails.getItems().isEmpty()) {
+            log.warn("Invoice items are missing or empty.");
+            return ResponseEntity.badRequest().body("Invoice must contain at least one item.");
+        }
+        for (InvoiceItem item : invoiceDetails.getItems()) {
+            if (item.getProductId() == null || item.getProductId().trim().isEmpty()) {
+                log.warn("Product ID is missing for an item.");
+                return ResponseEntity.badRequest().body("Product ID is missing for an item.");
+            }
+            int productIdInt;
+            try {
+                productIdInt = Integer.parseInt(item.getProductId()); 
+            } catch (NumberFormatException e) {
+                log.warn("Invalid Product ID format for item: {}", item.getProductId());
+                return ResponseEntity.badRequest().body("Invalid Product ID format: " + item.getProductId());
+            }
+            if (!productClientService.isValidProduct(productIdInt)) {
+               log.warn("Invalid product ID {} found in invoice items (not in cache or service).", productIdInt);
+               throw new ProductNotFoundException("Product ID : " + productIdInt + " cannot be found");
+            }
+            Product productOpt = productClientService.getProductById(productIdInt);
+            if(productOpt != null){
+                Product validatedProduct = productOpt;
+                log.info("Product {} (ID: {}) validated. Price from service: {}", validatedProduct.getName(), productIdInt, validatedProduct.getPrice());
+                double basePrice = validatedProduct.getPrice();
+                double taxPercent = validatedProduct.getTaxPercent();
+                double priceWithTax = basePrice + (basePrice * (taxPercent / 100.0));
+                item.setPricePerUnit((float) priceWithTax);
+            } else {
+                log.warn("Product ID {} was marked valid but details not found. Possible inconsistency.", productIdInt);
+                throw new ProductNotFoundException("Product ID : " + productIdInt + " cannot be found");
+            }
+        }
+        log.info("All product items validated successfully.");
+        
+        if (invoiceDetails.getItems() != null && !invoiceDetails.getItems().isEmpty()) {
+            Map<String, InvoiceItem> consolidatedItemsMap = new LinkedHashMap<>(); 
+            for (InvoiceItem currentItem : invoiceDetails.getItems()) {
+                String productId = currentItem.getProductId();
+                if (consolidatedItemsMap.containsKey(productId)) {
+                    InvoiceItem existingItem = consolidatedItemsMap.get(productId);
+                    existingItem.setQuantity(existingItem.getQuantity() + currentItem.getQuantity());
+                } else {
+                    consolidatedItemsMap.put(productId, currentItem);
+                }
+            }
+            invoiceDetails.setItems(new ArrayList<>(consolidatedItemsMap.values()));
+            log.info("Invoice items consolidated. Number of unique items: {}", invoiceDetails.getItems().size());
+        }
+        
+        if (invoiceDetails.getInvoiceNumber() == null || invoiceDetails.getInvoiceNumber().trim().isEmpty()) {
+        	log.error("Enter valid Invoice Number");
+        }
+        if(invoiceDetails.getInvoiceId() == null || invoiceDetails.getInvoiceId().trim().isEmpty()) {
+        	log.error("Enter valid Invoice Id");
+        }
+
+        invoiceDetails.calculateTotalAmount();
+        log.info("Calculated total bill amount: {}", invoiceDetails.getTotalAmount());
+        try {
+        	Invoice savedInvoice = invoiceClientService.updateInvoice(invoiceId, invoiceDetails);
+            log.info("Invoice processing complete for invoice number: {}", invoiceDetails.getInvoiceNumber());
+            String responseMessage = String.format("Invoice %s edited successfully for customer %s, by employee %s. Total: %.2f. %d item(s) processed.",
+                    savedInvoice.getInvoiceNumber(),
+                    validatedCustomer.getCustomerName(),
+                    validatedEmployee.getEmpName(),
+                    savedInvoice.getTotalAmount(),
+                    invoiceDetails.getItems().size()
+                    );
+            return ResponseEntity.status(HttpStatus.OK).body(responseMessage);
+
+        } catch (Exception e) {
+            log.error("Error during invoice processing for customer {}: {}", customerId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the invoice.");
+        }
 	}
 	
 	@DeleteMapping("/{invoiceId}")
